@@ -7,7 +7,7 @@ using namespace Rcpp;
 
 // rcpp_hello_world
 List rcpp_hello_world();
-RcppExport SEXP PesPila-Parabilis_rcpp_hello_world() {
+RcppExport SEXP PesPila_rcpp_hello_world() {
 BEGIN_RCPP
     SEXP __sexp_result;
     {

@@ -1,6 +1,6 @@
-\name{PesPila-Parabilis-package}
-\alias{PesPila-Parabilis-package}
-\alias{PesPila-Parabilis}
+\name{bla-package}
+\alias{bla-package}
+\alias{bla}
 \docType{package}
 \title{
 What the package does (short line)
@@ -11,7 +11,7 @@ More about what it does (maybe more than one line)
 }
 \details{
 \tabular{ll}{
-Package: \tab PesPila-Parabilis\cr
+Package: \tab bla\cr
 Type: \tab Package\cr
 Version: \tab 1.0\cr
 Date: \tab 2014-12-28\cr

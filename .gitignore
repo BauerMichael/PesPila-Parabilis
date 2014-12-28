@@ -10,3 +10,6 @@
 # RStudio files
 .Rproj.user/
 .Rproj.user
+
+# Mac files
+.DS_store
