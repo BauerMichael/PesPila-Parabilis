@@ -1,0 +1,3 @@
+useDynLib(PesPila-Parabilis)
+exportPattern("^[[:alpha:]]+")
+importFrom(Rcpp, evalCpp)
