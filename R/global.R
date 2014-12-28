@@ -18,7 +18,7 @@ colNames <- function(mypath = "data", filename = "colNames.csv") {
     return (read.csv(paste(mypath, filename, sep = "/")))
 }
 
-initData <- function() {
+loadData <- function(path = "data") {
     seasons <- c("9394", "9495", "9596", "9697",
                  "9798", "9899", "9900", "0001",
                  "0102", "0203", "0304", "0405",
@@ -26,32 +26,68 @@ initData <- function() {
                  "0910", "1011", "1112", "1213",
                  "1314", "1415")
     divisions <- c("D1.csv", "D2.csv")
-    createDirs(folders = seasons)
+    createDirs(mypath = path, folders = seasons)
     downloadFiles(folders = seasons, files = divisions)
 }
-# 
-# # col <- 70
-# # myData <- data.frame(matrix(0, 0, col))
-# # seasons <- c("9394", "9495", "9596", "9697",
-# #              "9798", "9899", "9900", "0001",
-# #              "0102", "0203", "0304", "0405",
-# #              "0506", "0607", "0708", "0809",
-# #              "0910", "1011", "1112", "1213",
-# #              "1314", "1415");
-# # # seasons <- c("93-94", "94-95", "95-96");
-# # seasons <- c("10-11");
-# # divisions <- c("D1.csv");
-# # # divisions <- c("D1.csv", "D2.csv");
-# # seasons <- rev(seasons)
-# # 
-# # for (season in seasons) {
-# #     for (division in divisions) {
-# #         this <- read.csv(file = paste(season, division, sep = "/"))
-# # #         print(c(season, division, dim(this)))
-# #         if (dim(this)[2] < col) {
-# #             this <- cbind(this, matrix(0.0, dim(this)[1], col-dim(this)[2]))
-# #             print(c(season, division, dim(this)))
-# #         }
-# #         myData <- rbind(myData, this)
-# #     }
-# # }
+
+cleanDataFiles <- function(path = "data") {
+    seasons <- c("9394", "9495", "9596", "9697",
+                 "9798", "9899", "9900", "0001",
+                 "0102", "0203", "0304", "0405",
+                 "0506", "0607", "0708", "0809",
+                 "0910", "1011", "1112", "1213",
+                 "1314", "1415")
+    divisions <- c("D1.csv", "D2.csv")
+    names <- as.matrix(colNames())
+    names <- as.character(names[,1])
+    col <- length(names)
+    for (season in seasons) {
+        for (division in divisions) {
+            mainData <- read.csv(paste(path, season, division, sep = "/"))
+            dim <- dim(mainData)
+            if (dim[2] < col) {
+                newData <- cbind(mainData, matrix(0, ncol = col-dim[2], nrow = dim[1]))
+                colnames(newData) <- names
+                write.csv(newData, paste(path, season, division, sep = "/"))
+            } else if (dim[2] == col) {
+                colnames(mainData) <- names
+                write.csv(mainData, paste(path, season, division, sep = "/"))
+            } else {
+                newData <- mainData[,1:col]
+                colnames(newData) <- names
+                write.csv(newData, paste(path, season, division, sep = "/"))
+            }
+        }
+    }
+}
+
+pasteData <- function(path = "data", filename = "complete.csv") {
+    seasons <- c("9394", "9495", "9596", "9697",
+                 "9798", "9899", "9900", "0001",
+                 "0102", "0203", "0304", "0405",
+                 "0506", "0607", "0708", "0809",
+                 "0910", "1011", "1112", "1213",
+                 "1314", "1415")
+    divisions <- c("D1.csv", "D2.csv")
+    names <- as.matrix(colNames())
+    names <- as.character(names[,1])
+    row <- 0
+    col <- length(names)
+    mainData <- data.frame(matrix(data = 0, nrow = row, ncol = col))
+    colnames(mainData) <- names
+    for (season in seasons) {
+        for (division in divisions) {
+            tmp <- read.csv(file = paste(path, season, division, sep = "/"))
+            mainData <- rbind(mainData, tmp)
+            write.csv(mainData[,1:28], paste(path, filename, sep = "/"))
+        }
+    }
+}
+
+init <- function(path = "data", filename = "complete.csv") {
+    loadData(path)
+    cleanDataFiles(path)
+    pasteData(path, filename)
+#     out <- read.csv(paste(path, filename, sep = "/"))
+#     return (out)
+}
