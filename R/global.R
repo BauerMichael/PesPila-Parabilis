@@ -14,6 +14,10 @@ downloadFiles <- function(myurl = "http://www.football-data.co.uk/mmz4281",
     }
 }
 
+colNames <- function(mypath = "data", filename = "colNames.csv") {
+    return (read.csv(paste(mypath, filename, sep = "/")))
+}
+
 initData <- function() {
     seasons <- c("9394", "9495", "9596", "9697",
                  "9798", "9899", "9900", "0001",
