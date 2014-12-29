@@ -55,6 +55,14 @@ combineData <- function(path = "data", folders = "", files = "", league = "bunde
     }
 }
 
+createTeamFolder <- function(path = "data", league = "bundesliga", filename = "teams.csv",
+                             warnings = FALSE) {
+    teams <- scan(file = paste(path, filename, sep = "/"), what = "character", sep = "\n")
+    for (team in teams) {
+        dir.create(paste(path, league, team, sep = "/"), showWarnings = warnings)
+    }
+}
+
 init <- function(path = "data", filename = "complete.csv") {
     seasons <- c("9394", "9495", "9596", "9697",
                  "9798", "9899", "9900", "0001",
@@ -67,4 +75,5 @@ init <- function(path = "data", filename = "complete.csv") {
     downloadFiles(folders = seasons, files = divisions)
     extractData(folders = seasons, files = divisions)
     combineData(folders = seasons, files = divisions)
+    createTeamFolder()
 }
