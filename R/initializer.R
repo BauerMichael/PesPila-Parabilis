@@ -16,7 +16,7 @@ downloadFiles <- function(url = "http://www.football-data.co.uk/mmz4281", league
 }
 
 extractData <- function(path = "data", folders = "", files = "", league = "bundesliga",
-                        analysisType = "typeNames.csv") {
+                        analysisType = "statistics.csv") {
     names <- scan(file = paste(path, analysisType, sep = "/"), what = "character")
     col <- length(names)
     
@@ -40,8 +40,8 @@ extractData <- function(path = "data", folders = "", files = "", league = "bunde
     }
 }
 
-combineData <- function(path = "data", folders = "", files = "", league = "bundesliga",
-                        filename = "complete.csv", analysisType = "typeNames.csv") {
+combineAllData <- function(path = "data", folders = "", files = "", league = "bundesliga",
+                        filename = "complete.csv", analysisType = "statistics.csv") {
     names <- scan(file = paste(path, analysisType, sep = "/"), what = "character")
     col <- length(names)
     mainData <- data.frame(matrix(data = 0, nrow = 0, ncol = col))
@@ -50,9 +50,13 @@ combineData <- function(path = "data", folders = "", files = "", league = "bunde
         for (file in files) {
             tmp <- read.csv(paste(path, league, folder, file, sep = "/"))
             mainData <- rbind(mainData, tmp)
-            write.csv(mainData, paste(path, filename, sep = "/"), row.names = FALSE)
         }
     }
+    D1 <- subset(mainData, Div == "D1")
+    D2 <- subset(mainData, Div == "D2")
+    write.csv(mainData, paste(path, league, filename, sep = "/"), row.names = FALSE)
+    write.csv(D1, paste(path, league, "D1.csv", sep = "/"), row.names = FALSE)
+    write.csv(D2, paste(path, league, "D2.csv", sep = "/"), row.names = FALSE)
 }
 
 createTeamFolder <- function(path = "data", league = "bundesliga", filename = "teams.csv",
@@ -62,6 +66,23 @@ createTeamFolder <- function(path = "data", league = "bundesliga", filename = "t
         dir.create(paste(path, league, team, sep = "/"), showWarnings = warnings)
     }
 }
+
+# updateSeason <- function(path = "data", league = "bundesliga", season = "1415",
+#                          filename = "complete.csv") {
+#     D1 <- read.csv(paste(path, league, season, "D1", sep = "/"))
+#     D2 <- read.csv(paste(path, league, season, "D2", sep = "/"))
+#     names <- scan(file = paste(path, analysisType, sep = "/"), what = "character")
+#     col <- length(names)
+#     mainData <- data.frame(matrix(data = 0, nrow = 0, ncol = col))
+#     colnames(mainData) <- names
+#     for (folder in folders) {
+#         for (file in files) {
+#             tmp <- read.csv(paste(path, league, folder, file, sep = "/"))
+#             mainData <- rbind(mainData, tmp)
+#             write.csv(mainData, paste(path, filename, sep = "/"), row.names = FALSE)
+#         }
+#     }
+# }
 
 init <- function(path = "data", filename = "complete.csv") {
     seasons <- c("9394", "9495", "9596", "9697",
@@ -74,6 +95,6 @@ init <- function(path = "data", filename = "complete.csv") {
     createDirs(folders = seasons)
     downloadFiles(folders = seasons, files = divisions)
     extractData(folders = seasons, files = divisions)
-    combineData(folders = seasons, files = divisions)
+    combineAllData(folders = seasons, files = divisions)
     createTeamFolder()
 }
