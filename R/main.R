@@ -28,6 +28,7 @@ extractTeamData <- function(path = "data", league = "bundesliga", filename = "da
 overallData <- function(path = "data", league = "bundesliga", filename = "leagueData.csv") {
     teams <- loadTeams()
     data <- loadLeagueContent()
+    results <- matrix(0, 10, 10)
     vec <- as.vector(data[, "FTR"])
     sums <- c(0, 0, 0)
     for (val in vec) {
@@ -41,10 +42,21 @@ overallData <- function(path = "data", league = "bundesliga", filename = "league
     }
     sums <- c(sums, sum(data[, "FTHG"]))
     sums <- c(sums, sum(data[, "FTAG"]))
+    sums <- matrix(sums)
+    
+    outcomes <- 0:9
+    rownames(results) <- outcomes
+    colnames(results) <- outcomes
+    home <- as.character(data[, "FTHG"])
+    away <- as.character(data[, "FTAG"])
+    for (i in 1:length(home)) {
+        results[home[i], away[i]] <- results[home[i], away[i]] + 1
+    }
+    out <- list(sums, results)
 #     stats <- loadPreferedStatistics()
 #     sums <- c()
 #     for (stat in stats) {
 #         sums <- c(sums, sum(as.vector(data[, stat])))
 #     }
-    return (sums)
+    return (out)
 }
