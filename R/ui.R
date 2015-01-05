@@ -14,12 +14,12 @@ shinyUI(fluidPage(
             helpText("Home team selection"),
             selectInput("home",
                         label = "Choose a home team",
-                        choices = c("Bayern Munich", "Wolfsburg"),
+                        choices = loadTeams(),
                         selected = "Bayern Munich"),
             helpText("Away team selection"),
             selectInput("away",
                         label = "Choose a home team",
-                        choices = c("Wolfsburg", "Bayern Munich"),
+                        choices = loadTeams(),
                         selected = "Wolfsburg")
     ),
     

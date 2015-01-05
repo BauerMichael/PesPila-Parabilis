@@ -18,7 +18,7 @@ shinyServer(
         })
         
         output$compare <- renderTable({
-            
+            teamComparison(input$home, input$away)[,1:10]
         })
         
     }

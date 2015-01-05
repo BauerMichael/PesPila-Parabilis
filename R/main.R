@@ -1,5 +1,5 @@
-loadAllContent <- function(path = "data", filename = "complete.csv") {
-    return (read.csv(file = paste(path, filename, sep = "/")))
+loadAllContent <- function(path = "data", league = "bundesliga", filename = "complete.csv") {
+    return (read.csv(file = paste(path, league, filename, sep = "/")))
 }
 
 loadLeagueContent <- function(path = "data", league = "bundesliga", filename = "D1.csv") {
@@ -26,7 +26,6 @@ extractTeamData <- function(path = "data", league = "bundesliga", filename = "da
 }
 
 overallData <- function(path = "data", league = "bundesliga", filename = "leagueData.csv") {
-    teams <- loadTeams()
     data <- loadLeagueContent()
     results <- matrix(0, 10, 10)
     vec <- as.vector(data[, "FTR"])
@@ -73,4 +72,11 @@ overallData <- function(path = "data", league = "bundesliga", filename = "league
     
     out <- list(sums, results, difference, goalSumsPerMatch)
     return (out)
+}
+
+teamComparison <- function(home = "", away = "") {
+    data <- loadAllContent()
+    compareTable <- data[ which( data$HomeTeam == home
+                                 & data$AwayTeam == away ), ]
+    return (compareTable)
 }
