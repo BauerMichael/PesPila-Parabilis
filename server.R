@@ -1,5 +1,8 @@
 library(shiny)
 
+# source(file = "R/main.R")
+# source(file = "R/initializer.R")
+
 shinyServer(
     function(input, output, session) {
         
@@ -19,6 +22,10 @@ shinyServer(
         
         output$compare <- renderTable({
             teamComparison(input$home, input$away)[,1:10]
+        })
+        
+        output$atall <- renderTable({
+            sumUpComparison(input$home, input$away)
         })
         
     }

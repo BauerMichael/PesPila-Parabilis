@@ -80,3 +80,28 @@ teamComparison <- function(home = "", away = "") {
                                  & data$AwayTeam == away ), ]
     return (compareTable)
 }
+
+sumUpComparison <- function(home = "", away = "") {
+    specData <- teamComparison(home, away)
+    colNames <- c("Home Team", "Away Team", "Home Win in %", "Draw in %", "Away Win in %",
+                  "Sum of home goals", "Sum of away goals", "Average home goals",
+                  "Average away goals")
+    sumUpData <- c(home, away, 0, 0, 0, 0, 0, 0, 0)
+    len <- dim(specData)[1]
+    for (i in 1:len) {
+        if (specData[i, "FTR"] == "H") {
+            sumUpData[3] <- as.integer(sumUpData[3]) + 1
+        } else if (specData[i, "FTR"] == "D") {
+            sumUpData[4] <- as.integer(sumUpData[4]) + 1
+        } else {
+            sumUpData[5] <- as.integer(sumUpData[5]) + 1
+        }
+    }
+    sumUpData[6] <- sum(specData[, "FTHG"])
+    sumUpData[7] <- sum(specData[, "FTAG"])
+    sumUpData <- matrix(sumUpData)
+    sumUpData <- t(sumUpData)
+    colnames(sumUpData) <- colNames
+    
+    return (sumUpData)
+}
