@@ -1,8 +1,5 @@
 library(shiny)
 
-# source(file = "R/main.R")
-# source(file = "R/initializer.R")
-
 shinyServer(
     function(input, output, session) {
         
