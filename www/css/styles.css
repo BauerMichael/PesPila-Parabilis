@@ -44,3 +44,21 @@ a {
 .dataTable {
     min-height: 600px;
 }
+
+#compare, #compareAll, #overview {
+    background: #ccc;
+    font-size: 11px;
+}
+#compare table tr, #compareAll table tr, #overview table tr {
+    padding: 0px 0px 0px 0px;
+}
+
+#legend {
+    color: #660000;
+    font-weight: bold;
+    font-size: 12px;
+}
+#header {
+    font-size: 14px;
+    color: #000;
+}

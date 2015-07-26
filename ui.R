@@ -1,5 +1,7 @@
 library(shiny)
 
+source("global.R")
+
 shinyUI(
 
     navbarPage("PesPila-Parabilis",
@@ -22,7 +24,11 @@ shinyUI(
                       I need to re-develope this tool and make a great web interface for it. So, here we are. Test it, try it, enjoy it!"),
             tags$br(),
             tags$h4("Michael", class = "text-right")
-          )
+          ),
+          div(class = "text-center",
+            actionButton("reload", "Update the data sets.")
+          ),
+          textOutput("test")
         ),
         tabPanel("general data",
 
@@ -39,7 +45,7 @@ shinyUI(
               ),
               column(6,
                   tabsetPanel(
-                      tabPanel("Plot", tableOutput("stats"))
+                      tabPanel("Overview", dataTableOutput("stats"))
                   )
               )
           )
@@ -64,30 +70,41 @@ shinyUI(
               column(3, offset = 1,
                   sidebarPanel(width = 12,
 
-                          helpText("Home team selection"),
                           selectInput("home",
                                       label = "Choose a home team",
                                       choices = loadTeams(),
                                       selected = "Bayern Munich"),
-                          helpText("Away team selection"),
+
                           selectInput("away",
                                       label = "Choose a home team",
                                       choices = loadTeams(),
                                       selected = "Wolfsburg")
+                  ),
+                  sidebarPanel(width = 12, id = "legend",
+                      div("Description of the shortcuts:", id = "header"),
+                      br(),
+                      div("FTHG = Full Time Home Goals"),
+                      div("FTAG = Full Time Away Goals"),
+                      div("FTR = Full Time Result"),
+                      div("HTHG = Half Time Home Goals"),
+                      div("HTAG = Half Time Away Goals"),
+                      div("HTR = Half Time Result")
                   )
               ),
-              column(6,
+              column(8,
                   tabsetPanel(
-                      tabPanel("Team comparison", tableOutput("compare")),
-                      tabPanel("Overview", tableOutput("atall"))
+                      tabPanel("Home vs. Away", dataTableOutput("compare")),
+                      tabPanel("All outcomes of the two teams", dataTableOutput("compareAll")),
+                      tabPanel("Overview: Home vs. Away", dataTableOutput("overview"))
                   )
               )
           )
         ),
-
+        
         tags$head(
             tags$link(rel = "stylesheet", type = "text/css", href = "/css/bootstrap.min.css"),
-            tags$link(rel = "stylesheet", type = "text/css", href = "/css/styles.css")
+            tags$link(rel = "stylesheet", type = "text/css", href = "/css/styles.css"),
+            tags$script(src = "/js/scripts.js")
         )
     )
 )

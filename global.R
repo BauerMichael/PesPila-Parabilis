@@ -74,15 +74,25 @@ overallData <- function(path = "data", league = "bundesliga", filename = "league
     return (out)
 }
 
+allGamesComparison <- function(home = "", away = "") {
+    data <- loadAllContent()
+    compareTable <- data[which(data$HomeTeam == home
+                               & data$AwayTeam == away), ]
+    compareTable <- rbind(compareTable, data[which(data$HomeTeam == away
+                               & data$AwayTeam == home), ])
+    return (compareTable)
+}
+
 teamComparison <- function(home = "", away = "") {
     data <- loadAllContent()
-    compareTable <- data[ which( data$HomeTeam == home
-                                 & data$AwayTeam == away ), ]
+    compareTable <- data[which(data$HomeTeam == home
+                               & data$AwayTeam == away), ]
     return (compareTable)
 }
 
 sumUpComparison <- function(home = "", away = "") {
     specData <- teamComparison(home, away)
+    column.names <- colnames(specData)
     colNames <- c("Home Team", "Away Team", "Home Win in %", "Draw in %", "Away Win in %",
                   "Sum of home goals", "Sum of away goals", "Average home goals",
                   "Average away goals")
@@ -102,6 +112,7 @@ sumUpComparison <- function(home = "", away = "") {
     sumUpData <- matrix(sumUpData)
     sumUpData <- t(sumUpData)
     colnames(sumUpData) <- colNames
+    # colnames(sumUpData) <- column.names
     
     return (sumUpData)
 }
@@ -174,23 +185,6 @@ createTeamFolder <- function(path = "data", league = "bundesliga", filename = "t
         dir.create(paste(path, league, team, sep = "/"), showWarnings = warnings)
     }
 }
-
-# updateSeason <- function(path = "data", league = "bundesliga", season = "1415",
-#                          filename = "complete.csv") {
-#     D1 <- read.csv(paste(path, league, season, "D1", sep = "/"))
-#     D2 <- read.csv(paste(path, league, season, "D2", sep = "/"))
-#     names <- scan(file = paste(path, analysisType, sep = "/"), what = "character")
-#     col <- length(names)
-#     mainData <- data.frame(matrix(data = 0, nrow = 0, ncol = col))
-#     colnames(mainData) <- names
-#     for (folder in folders) {
-#         for (file in files) {
-#             tmp <- read.csv(paste(path, league, folder, file, sep = "/"))
-#             mainData <- rbind(mainData, tmp)
-#             write.csv(mainData, paste(path, filename, sep = "/"), row.names = FALSE)
-#         }
-#     }
-# }
 
 init <- function(path = "data", filename = "complete.csv") {
     seasons <- c("9394", "9495", "9596", "9697",
