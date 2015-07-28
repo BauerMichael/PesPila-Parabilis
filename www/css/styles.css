@@ -41,16 +41,11 @@ a {
     font-weight: bold;
 }
 
-.dataTable {
-    min-height: 600px;
-}
-
-#compare, #compareAll, #overview {
+#compare, #compareAll, #overview, #overviewAll, #teamData, #sumTeamData,
+#stats, #wins, #results, #goalDifferences, #gspm, #all,
+#results1, #results2, #results3, #results4, #results5 {
     background: #ccc;
     font-size: 11px;
-}
-#compare table tr, #compareAll table tr, #overview table tr {
-    padding: 0px 0px 0px 0px;
 }
 
 #legend {
@@ -61,4 +56,8 @@ a {
 #header {
     font-size: 14px;
     color: #000;
+}
+
+#InitializeData {
+    display: none;
 }
