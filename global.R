@@ -299,6 +299,33 @@ ResultsComparison <- function(path = "Data", country = "Germany", league = "Bund
     cum.data[, 1] <- row.names
     return (cum.data)
 }
+
+OneTeamsData <- function(team, path = "Data", country = "Germany", filename = "Synopsis.csv") {
+    # print(paste(path, country, filename, sep = "/"))
+    dataset <- read.csv(file = paste(path, country, filename, sep = "/"))
+    home <- subset(dataset, HomeTeam == team)
+    away <- subset(dataset, AwayTeam == team)
+    print(rbind(home, away))
+    return (rbind(home, away))
+    # return (matrix(1:16, 4, 4))
+}
+
+OverviewOneTeam <- function(myTeam, path = "Data", league = "Germany", filename = "data.csv") {
+    # teams <- loadTeams()
+    data <- loadAllContent()
+    # for (team in teams) {
+        home <- subset(data, HomeTeam == myTeam)
+        output <- c(myTeam)
+        # away <- subset(data, AwayTeam == myTeam)
+        # whole <- rbind(home, away)
+        for (i in 4:ncol(home)) {
+            output <- c(output, sum(as.numeric(home[, i])))
+        }
+        # output <- sum(home[, 5:14])
+        # write.csv(whole, paste(path, league, team, filename, sep = "/"), row.names = FALSE)
+    # }
+    return (output)
+}
 # ---------------------------------------------------------------------------------------------------------------------------------------
 
 loadAllContent <- function(path = "Data", league = "Germany", filename = "Synopsis.csv") {

@@ -43,7 +43,7 @@ shinyUI(
                     selectInput("division", label = "Choose division", choices = "", selected = "")
                   ),
                   column(4,
-                    selectInput("theTeam", label = "Choose favourite team", choices = "", selected = "")
+                    selectInput("theTeam", label = "Choose favorite team", choices = "", selected = "")
                   )
                 ),
                 div(class = "text-center",
@@ -82,7 +82,7 @@ shinyUI(
           #   tags$h4("Michael", class = "text-right")
           # ),
         ),
-        tabPanel("general data",
+        tabPanel("league data",
 
           fluidRow(
               column(3, offset = 1,
@@ -91,15 +91,26 @@ shinyUI(
                           selectInput("countryOverview", 
                                       label = "Choose a country",
                                       choices = GetCountries(),
-                                      selected = "Germany"),
+                                      selected = ReadPreferences()[1]),
                           selectInput("leagueOverview", 
                                       label = "Choose a league (for Results table)",
                                       choices = strsplit(x = list.files(path = paste("Data", "Germany", sep = "/"), pattern = ".csv"), split = ".csv"),
-                                      selected = "Bundesliga1")
+                                      selected = ReadPreferences()[2])
+                  ),
+                  sidebarPanel(width = 12, id = "legend",
+                      div("Description of the shortcuts:", id = "header"),
+                      br(),
+                      div("FTHG = Full Time Home Goals"),
+                      div("FTAG = Full Time Away Goals"),
+                      div("FTR = Full Time Result"),
+                      div("HTHG = Half Time Home Goals"),
+                      div("HTAG = Half Time Away Goals"),
+                      div("HTR = Half Time Result")
                   )
               ),
               column(7,
                   tabsetPanel(
+                      tabPanel("Results Cross Table", dataTableOutput("results")),
                       tabPanel("Wins", dataTableOutput("wins")),
                       # tabPanel("Results",
                       #   tabsetPanel(
@@ -110,7 +121,6 @@ shinyUI(
                       #     tabPanel("5th League", dataTableOutput("results5"))
                       #   )
                       # ),
-                      tabPanel("Results", dataTableOutput("results")),
                       tabPanel("Goal Differences", dataTableOutput("goalDifferences")),
                       tabPanel("Goal Sums Per Match (GSPM)", dataTableOutput("gspm")),
                       tabPanel("All Games", dataTableOutput("all"))
@@ -118,16 +128,24 @@ shinyUI(
               )
           )
         ),
-        tabPanel("data per team",
+        tabPanel("team data",
 
           fluidRow(
               column(3,
                   sidebarPanel(width = 12,
 
-                          selectInput("team",
-                                      label = "Select prefered team",
-                                      choices = loadTeams(),
-                                      selected = "Bayern Munich")
+                          selectInput("teamCountry",
+                                      label = "Select country",
+                                      choices = GetCountries(),
+                                      selected = ReadPreferences()[1]),
+                          selectInput("teamDivision",
+                                      label = "Select league",
+                                      choices = strsplit(x = list.files(path = paste("Data", ReadPreferences()[1], sep = "/"), pattern = ".csv"), split = ".csv"),
+                                      selected = ReadPreferences()[2]),
+                          selectInput("teamChoice",
+                                      label = "Select team",
+                                      choices = team <- FolderStructure(path = paste("Data", ReadPreferences()[1], sep = "/")),
+                                      selected = ReadPreferences()[3])
                   ),
 
                   sidebarPanel(width = 12, id = "legend",
@@ -149,7 +167,7 @@ shinyUI(
               )
           )
         ),
-        tabPanel("result prediction",
+        tabPanel("home vs. away",
 
           fluidRow(
               column(3,
