@@ -43,7 +43,9 @@ a {
 
 #compare, #compareAll, #overview, #overviewAll, #teamData, #sumTeamData,
 #stats, #wins, #results, #goalDifferences, #gspm, #all,
-#results1, #results2, #results3, #results4, #results5 {
+#results1, #results2, #results3, #results4, #results5,
+#allMatches, #homeMatches, #awayMatches, #divisionMatches,
+#overviewMatches, #last2, #last5, #last10 {
     background: #ccc;
     font-size: 11px;
 }

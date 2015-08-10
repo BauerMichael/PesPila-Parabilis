@@ -1,5 +1,6 @@
 library(shiny)
 library(hash)
+library(ggplot2)
 
 options(warn=-1)
 
@@ -63,24 +64,6 @@ shinyUI(
               )
             )
           )
-
-          # div(class = "col-sm-10 col-sm-offset-1 jumbotron text-center",
-          #   tags$h1("PesPila-Parabilis"),
-          #   tags$h3("A tool to predict the outcome of football matches in the Bundesliga"),
-          #   tags$br(),
-          #   tags$br(),
-          #   tags$h4("These days the word Big Data is in everyones mouth. Big companies try to predict how stock markets change or advertisement
-          #             drives the sales, but also the consumers behaviour is a big deal. There are other interesting things which could
-          #             be done with an amount of data: bioinformatics, mathematics and of course prediction models for football bets.
-          #             Well, to make this clear: I am not interested in betting or making money with this - I wouldn't even recommend my
-          #             tool to make money ;) - but I am interested in programming and how I can use data in a useful sense.
-          #             Maybe the colors of this website already gives you a guess that I am a FC Bayern Munich fan. So my main purpose was
-          #             to look, if I can find out the outcome of their games. In the first beta version (which was a mess) the tool said:
-          #             'VfL Wolfsburg will beat Bayern Munich'. My first thougth was: 'Hahaha'. But as Wolfsburg won 4-1 I knew some day
-          #             I need to re-develope this tool and make a great web interface for it. So, here we are. Test it, try it, enjoy it!"),
-          #   tags$br(),
-          #   tags$h4("Michael", class = "text-right")
-          # ),
         ),
         tabPanel("league data",
 
@@ -112,18 +95,9 @@ shinyUI(
                   tabsetPanel(
                       tabPanel("Results Cross Table", dataTableOutput("results")),
                       tabPanel("Wins", dataTableOutput("wins")),
-                      # tabPanel("Results",
-                      #   tabsetPanel(
-                      #     tabPanel("1st League", dataTableOutput("results1")),
-                      #     tabPanel("2nd League", dataTableOutput("results2")),
-                      #     tabPanel("3rd League", dataTableOutput("results3")),
-                      #     tabPanel("4th League", dataTableOutput("results4")),
-                      #     tabPanel("5th League", dataTableOutput("results5"))
-                      #   )
-                      # ),
                       tabPanel("Goal Differences", dataTableOutput("goalDifferences")),
                       tabPanel("Goal Sums Per Match (GSPM)", dataTableOutput("gspm")),
-                      tabPanel("All Games", dataTableOutput("all"))
+                      tabPanel("All Matches", dataTableOutput("all"))
                   )
               )
           )
@@ -161,8 +135,34 @@ shinyUI(
               ),
               column(8,
                   tabsetPanel(
-                      tabPanel("Team data", dataTableOutput("teamData")),
-                      tabPanel("Overview: team data", dataTableOutput("sumTeamData"))
+                      tabPanel("All Matches",
+                          tabsetPanel(
+                            tabPanel("Data Table", dataTableOutput("allMatches")),
+                            tabPanel("Trend Plot", plotOutput("allMatchesTrend")),
+                            tabPanel("Box Plot", plotOutput("allMatchesBoxPlot"))
+                          )
+                      ),
+                      # tabPanel("All Matches", dataTableOutput("allMatches")),
+                      tabPanel("Home Matches",
+                          tabsetPanel(
+                            tabPanel("Data Table", dataTableOutput("homeMatches")),
+                            tabPanel("Trend Plot", plotOutput("homeMatchesTrend")),
+                            tabPanel("Box Plot", plotOutput("homeMatchesBoxPlot"))
+                          )
+                      ),
+                      tabPanel("Away Matches",
+                          tabsetPanel(
+                            tabPanel("Data Table", dataTableOutput("awayMatches")),
+                            tabPanel("Trend Plot", plotOutput("awayMatchesTrend")),
+                            tabPanel("Box Plot", plotOutput("awayMatchesBoxPlot"))
+                          )
+                      ),
+                      # tabPanel("Away Matches", dataTableOutput("awayMatches")),
+                      tabPanel("By Division", dataTableOutput("divisionMatches")),
+                      tabPanel("Last 2", dataTableOutput("last2")),
+                      tabPanel("Last 5", dataTableOutput("last5")),
+                      tabPanel("Last 10", dataTableOutput("last10")),
+                      tabPanel("Overview", dataTableOutput("overviewMatches"))
                   )
               )
           )
@@ -175,12 +175,12 @@ shinyUI(
 
                           selectInput("home",
                                       label = "Choose a home team",
-                                      choices = loadTeams(),
+                                      choices = team <- FolderStructure(path = paste("Data", ReadPreferences()[1], sep = "/")),
                                       selected = "Bayern Munich"),
 
                           selectInput("away",
                                       label = "Choose a home team",
-                                      choices = loadTeams(),
+                                      choices = team <- FolderStructure(path = paste("Data", ReadPreferences()[1], sep = "/")),
                                       selected = "Wolfsburg")
                   ),
                   sidebarPanel(width = 12, id = "legend",
@@ -196,10 +196,22 @@ shinyUI(
               ),
               column(8,
                   tabsetPanel(
-                      tabPanel("Home vs. Away", dataTableOutput("compare")),
-                      tabPanel("Overview: Home vs. Away", dataTableOutput("overview")),
-                      tabPanel("All outcomes of the two teams", dataTableOutput("compareAll")),
-                      tabPanel("Overview: All outcomes", dataTableOutput("overviewAll"))
+                      tabPanel("Home vs. Away", {
+                        tabsetPanel(
+                          tabPanel("Data Table", dataTableOutput("compare")),
+                          tabPanel("Box Plot", plotOutput("hvaBoxPlot")),
+                          tabPanel("Summary", dataTableOutput("overview"))
+                        )
+                      }),
+                      tabPanel("All matches", {
+                        tabsetPanel(
+                          tabPanel("All outcomes of the two teams", dataTableOutput("compareAll")),
+                          tabPanel("Box Plot", plotOutput("hvaAllBoxPlot"))
+                          # tabPanel("Summary", dataTableOutput("overview"))
+                        )
+                      }),
+                      tabPanel("Overview: All outcomes", dataTableOutput("overviewAll")),
+                      tabPanel("LM Plot", plotOutput("lmTest"))
                   )
               )
           )

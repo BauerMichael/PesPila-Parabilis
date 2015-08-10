@@ -49,6 +49,10 @@ GetLeaguesFilenameHashTable <- function() {
     return (hash(keys = GetFilenames(), values = GetLeagues()))
 }
 
+GetFilenamesLeaugesHashTable <- function() {
+    return (hash(keys = strsplit(x = GetLeagues(), split = ".csv"), values = GetFilenames()))
+}
+
 CreateTempDir <- function(path = "Data") {
     temp.dir <- paste(path, "Temp", sep = "/")
     dir.create(temp.dir)
@@ -77,20 +81,41 @@ Unzip2Dir <- function(path = "Data", seasons = "") {
     }
 }
 
+# CopyData <- function(path = "Data", temp.dir = "Data/Temp", seasons = "") {
+#     for (season in seasons) {
+#         files <- list.files(paste(temp.dir, season, sep = "/"))
+#         for (file in files) {
+#             dataset <- read.csv(paste(temp.dir, season, file, sep = "/"))
+#             dataset.rows <- nrow(dataset)
+#             new.dataset <- data.frame(matrix(data = 0, nrow = dataset.rows, ncol = dataset.cols))
+#             colnames(new.dataset) <- column.names
+#             for (name in column.names) {
+#                 if (name %in% colnames(dataset)) {
+#                     new.dataset[, name] <- dataset[, name]
+#                 } else {
+#                     new.dataset[, name] <- 0
+#                 }
+#             }
+#             new.dataset <- subset(new.dataset, Div != "")
+#             write.csv(new.dataset, paste(temp.dir, season, file, sep = "/"), row.names = FALSE)
+#         }
+#     }
+# }
+
 DeleteTempDirectory <- function(path = "Data") {
     unlink(x = paste(path), recursive = TRUE)
 }
 
 ExtractData <- function(path = "Data", temp.dir = "Data/Temp",
                         statistics = "Statistics.csv") {
-    folders <- GetSeasons()
+    seasons <- GetSeasons()
     column.names <- scan(file = paste(path, statistics, sep = "/"), what = "character")
     dataset.cols <- length(column.names)
     
-    for (folder in folders) {
-        files <- list.files(paste(temp.dir, folder, sep = "/"))
+    for (season in seasons) {
+        files <- list.files(paste(temp.dir, season, sep = "/"))
         for (file in files) {
-            dataset <- read.csv(paste(temp.dir, folder, file, sep = "/"))
+            dataset <- read.csv(paste(temp.dir, season, file, sep = "/"))
             dataset.rows <- nrow(dataset)
             new.dataset <- data.frame(matrix(data = 0, nrow = dataset.rows, ncol = dataset.cols))
             colnames(new.dataset) <- column.names
@@ -102,7 +127,7 @@ ExtractData <- function(path = "Data", temp.dir = "Data/Temp",
                 }
             }
             new.dataset <- subset(new.dataset, Div != "")
-            write.csv(new.dataset, paste(temp.dir, folder, file, sep = "/"), row.names = FALSE)
+            write.csv(new.dataset, paste(temp.dir, season, file, sep = "/"), row.names = FALSE)
         }
     }
 }
@@ -160,6 +185,7 @@ Initialize <- function(path = "Data") {
     Unzip2Dir(temp.dir, seasons)
     ExtractData(path, temp.dir)
     SetData(path, temp.dir)
+    CopyData(path, temp.dir)
     DeleteTempDirectory(temp.dir)
     RenameFiles(path)
     for (c in country) {
@@ -209,13 +235,13 @@ LoadCountryData <- function(path = "Data", country = "Germany", filename = "Bund
 }
 
 Wins <- function(path = "Data", country = "Germany") {
-    leagues <- list.files(path = paste(path, country, sep = "/"), pattern = ".csv")
-    length.leagues <- length(leagues)
+    divisions <- list.files(path = paste(path, country, sep = "/"), pattern = ".csv")
+    length.divisions <- length(divisions)
     row.names <- c()
     column.names <- c("League", "HWin", "Draw", "AWin", "FTHG", "FTAG", "HTHG", "HTAG")
-    cum.data <- data.frame(matrix(0, length.leagues, 8))
-    for (i in 1:length.leagues) {
-        dataset <- LoadCountryData(path, country, leagues[i])
+    cum.data <- data.frame(matrix(0, length.divisions, 8))
+    for (i in 1:length.divisions) {
+        dataset <- LoadCountryData(path, country, divisions[i])
         sum <- c(0, 0, 0, 0, sum(dataset[, "FTHG"]), sum(dataset[, "FTAG"]), sum(dataset[, "HTHG"]), sum(dataset[, "HTAG"]))
         for (value in as.vector(dataset[, "FTR"])) {
             if (value == "H") {
@@ -226,7 +252,7 @@ Wins <- function(path = "Data", country = "Germany") {
                 sum[4] <- sum[4] + 1
             }
         }
-        row.names <- c(row.names, strsplit(x = leagues[i], split = ".csv")[[1]])
+        row.names <- c(row.names, strsplit(x = divisions[i], split = ".csv")[[1]])
         cum.data[i, ] <- sum
     }
     rownames(cum.data) <- row.names
@@ -236,20 +262,20 @@ Wins <- function(path = "Data", country = "Germany") {
 }
 
 GoalDifferences <- function(path = "Data", country = "Germany") {
-    leagues <- list.files(path = paste(path, country, sep = "/"), pattern = ".csv")
-    length.leagues <- length(leagues)
+    divisions <- list.files(path = paste(path, country, sep = "/"), pattern = ".csv")
+    length.divisions <- length(divisions)
     row.names <- c()
     column.names <- c("League", 0:9)
-    cum.data <- data.frame(matrix(0, length.leagues, 11))
-    for (i in 1:length.leagues) {
-        dataset <- LoadCountryData(path, country, leagues[i])
+    cum.data <- data.frame(matrix(0, length.divisions, 11))
+    for (i in 1:length.divisions) {
+        dataset <- LoadCountryData(path, country, divisions[i])
         home <- dataset[, "FTHG"]
         away <- dataset[, "FTAG"]
         for (j in 1:length(home)) {
             difference <- abs(home[j] - away[j])
             cum.data[i, difference + 2] <- cum.data[i, difference + 2] + 1
         }
-        row.names <- c(row.names, strsplit(x = leagues[i], split = ".csv")[[1]])
+        row.names <- c(row.names, strsplit(x = divisions[i], split = ".csv")[[1]])
     }
     rownames(cum.data) <- row.names
     colnames(cum.data) <- column.names
@@ -258,14 +284,14 @@ GoalDifferences <- function(path = "Data", country = "Germany") {
 }
 
 GSPM <- function(path = "Data", country = "Germany") {
-    leagues <- list.files(path = paste(path, country, sep = "/"), pattern = ".csv")
-    length.leagues <- length(leagues)
+    divisions <- list.files(path = paste(path, country, sep = "/"), pattern = ".csv")
+    length.divisions <- length(divisions)
     row.names <- c()
     column.names <- c("League", 0:13)
-    cum.data <- data.frame(matrix(0, length.leagues, 15))
-    for (i in 1:length.leagues) {
-        # filename <- paste(leagues[i], ".csv", sep = "")
-        dataset <- LoadCountryData(path, country, leagues[i])
+    cum.data <- data.frame(matrix(0, length.divisions, 15))
+    for (i in 1:length.divisions) {
+        # filename <- paste(divisions[i], ".csv", sep = "")
+        dataset <- LoadCountryData(path, country, divisions[i])
         home <- dataset[, "FTHG"]
         away <- dataset[, "FTAG"]
         for (j in 1:length(home)) {
@@ -275,7 +301,7 @@ GSPM <- function(path = "Data", country = "Germany") {
             }
             cum.data[i, gspm + 2] <- cum.data[i, gspm + 2] + 1
         }
-        row.names <- c(row.names, strsplit(x = leagues[i], split = ".csv")[[1]])
+        row.names <- c(row.names, strsplit(x = divisions[i], split = ".csv")[[1]])
     }
     rownames(cum.data) <- row.names
     colnames(cum.data) <- column.names
@@ -283,8 +309,8 @@ GSPM <- function(path = "Data", country = "Germany") {
     return (cum.data)
 }
 
-ResultsComparison <- function(path = "Data", country = "Germany", league = "Bundesliga1") {
-    dataset <- LoadCountryData(path, country, paste(league, ".csv", sep = ""))
+ResultsComparison <- function(path = "Data", country = "Germany", division = "Bundesliga1") {
+    dataset <- LoadCountryData(path, country, paste(division, ".csv", sep = ""))
     column.names <- c("H\\A", 0:11)
     row.names <- 0:11
     cum.data <- data.frame(matrix(0, 12, 13))
@@ -300,32 +326,193 @@ ResultsComparison <- function(path = "Data", country = "Germany", league = "Bund
     return (cum.data)
 }
 
-OneTeamsData <- function(team, path = "Data", country = "Germany", filename = "Synopsis.csv") {
-    # print(paste(path, country, filename, sep = "/"))
+OneTeamsData <- function(team, kind = "B", path = "Data", country = "Germany", filename = "Synopsis.csv") {
     dataset <- read.csv(file = paste(path, country, filename, sep = "/"))
     home <- subset(dataset, HomeTeam == team)
     away <- subset(dataset, AwayTeam == team)
-    print(rbind(home, away))
-    return (rbind(home, away))
-    # return (matrix(1:16, 4, 4))
+    if (kind == "B") {
+        return (rbind(home, away))
+    } else if (kind == "H") {
+        return (home)
+    } else {
+        return (away)
+    }
 }
 
-OverviewOneTeam <- function(myTeam, path = "Data", league = "Germany", filename = "data.csv") {
-    # teams <- loadTeams()
-    data <- loadAllContent()
-    # for (team in teams) {
-        home <- subset(data, HomeTeam == myTeam)
-        output <- c(myTeam)
-        # away <- subset(data, AwayTeam == myTeam)
-        # whole <- rbind(home, away)
-        for (i in 4:ncol(home)) {
-            output <- c(output, sum(as.numeric(home[, i])))
-        }
-        # output <- sum(home[, 5:14])
-        # write.csv(whole, paste(path, league, team, filename, sep = "/"), row.names = FALSE)
-    # }
-    return (output)
+MatchesByDivision <- function(team, path = "Data", country = "Germany", division = "Bundesliga1", filename = "Synopsis.csv") {
+    dataset <- read.csv(file = paste(path, country, filename, sep = "/"))
+    home <- subset(dataset, HomeTeam == team)
+    away <- subset(dataset, AwayTeam == team)
+    dataset <- rbind(home, away)
+    hash.table <- GetFilenamesLeaugesHashTable()
+    hash <- strsplit(x = hash.table[[division]], split = ".csv")
+    return (subset(dataset, Div == hash))
 }
+
+TrendPlot <- function(team, kind = "B", path = "Data", country = "Germany", filename = "Synopsis.csv") {
+    if (kind == "B") {
+        dataset <- read.csv(file = paste(path, country, filename, sep = "/"))
+        dataset <- subset(dataset, HomeTeam == team | AwayTeam == team)
+        trend.points <- rep(x = 0, times = nrow(dataset))
+        box.points <- rep(x = 0, times = nrow(dataset)+1)
+        for (i in 2:(nrow(dataset)+1)) {
+            if (dataset[, "HomeTeam"] == team && dataset[i-1, "FTR"] == "H") {
+                trend.points[i-1] <- 1
+                box.points[i] <- box.points[i-1] + 3
+            } else if (dataset[, "AwayTeam"] == team && dataset[i-1, "FTR"] == "A") {
+                trend.points[i-1] <- 1
+                box.points[i] <- box.points[i-1] + 3
+            } else if (dataset[i-1, "FTR"] == "D") {
+                trend.points[i-1] <- 0
+                box.points[i] <- box.points[i-1] + 1
+            } else {
+                trend.points[i-1] <- -1
+                box.points[i] <- box.points[i-1] + 0
+            }
+        }
+        return (list(1:nrow(dataset), trend.points, as.character(dataset[, "Date"]), box.points))
+    } else {
+        dataset <- OneTeamsData(team, kind, path, country, filename)
+        trend.points <- rep(x = 0, times = nrow(dataset))
+        box.points <- rep(x = 0, times = nrow(dataset)+1)
+        for (i in 2:(nrow(dataset)+1)) {
+            if (dataset[i-1, "FTR"] == kind) {
+                trend.points[i-1] <- 1
+                box.points[i] <- box.points[i-1] + 3
+            } else if (dataset[i-1, "FTR"] == "D") {
+                trend.points[i-1] <- 0
+                box.points[i] <- box.points[i-1] + 1
+            } else {
+                trend.points[i-1] <- -1
+                box.points[i] <- box.points[i-1] + 0
+            }
+        }
+        return (list(1:nrow(dataset), trend.points, as.character(dataset[, "Date"]), box.points))
+    }
+}
+
+Trend <- function(home, away) {
+    data <- AllGamesComparison(home, away)
+    print(data)
+    hBox.Trend <- rep(x = 0, times = nrow(data))
+    aBox.Trend <- rep(x = 0, times = nrow(data))
+    for (i in 1:nrow(dataset)) {
+        if (data[, "HomeTeam"] == team && data[i, "FTR"] == "H") {
+            hBox.Trend[i] <- hBox.Trend[i] + 3
+        } else if (data[, "HomeTeam"] == away && data[i, "FTR"] == "H") {
+            aBox.Trend[i] <- aBox.Trend[i] + 3
+        } else if (data[, "HomeTeam"] == team && data[i, "FTR"] == "D") {
+            hBox.Trend[i] <- hBox.Trend[i] + 1
+            aBox.Trend[i] <- hBox.Trend[i] + 1
+        }
+    }
+    return (list(hBox.Trend, aBox.Trend))
+}
+
+TeamOverview <- function(team, path = "Data", country = "Germany", filename = "Synopsis.csv") {
+    header <- c("\\", "Win", "Draw", "Lost", "FTG", "HTG", "FTG against", "HTG against")
+    rows <- c("Home", "Away", "Overall")
+    dataset <- read.csv(file = paste(path, country, filename, sep = "/"))
+    new.data <- data.frame(matrix(0, 3, 8))
+    home <- subset(dataset, HomeTeam == team)
+    away <- subset(dataset, AwayTeam == team)
+    new.data[1, 2] <- nrow(subset(home, FTR == "H"))
+    new.data[1, 3] <- nrow(subset(home, FTR == "D"))
+    new.data[1, 4] <- nrow(subset(home, FTR == "A"))
+    new.data[2, 2] <- nrow(subset(away, FTR == "A"))
+    new.data[2, 3] <- nrow(subset(away, FTR == "D"))
+    new.data[2, 4] <- nrow(subset(away, FTR == "H"))
+    new.data[1, 5] <- sum(home[, "FTHG"])
+    new.data[1, 6] <- sum(home[, "HTHG"])
+    new.data[1, 7] <- sum(home[, "FTAG"])
+    new.data[1, 8] <- sum(home[, "HTAG"])
+    new.data[2, 5] <- sum(away[, "FTAG"])
+    new.data[2, 6] <- sum(away[, "HTAG"])
+    new.data[2, 7] <- sum(away[, "FTHG"])
+    new.data[2, 8] <- sum(away[, "HTHG"])
+    for (i in 2:ncol(new.data)) {
+        new.data[3, i] <- new.data[1, i] + new.data[2, i]
+    }
+    rownames(new.data) <- rows
+    new.data[, 1] <- rows
+    colnames(new.data) <- header
+    return (new.data)
+}
+
+LastMatches <- function(team, no = 2, path = "Data", country = "Germany", filename = "Synopsis.csv") {
+    dataset <- read.csv(file = paste(path, country, filename, sep = "/"))
+    new.data <- data.frame(matrix(0, no, ncol(dataset)))
+    colnames(new.data) <- colnames(dataset)
+    count <- 1
+    for (i in nrow(dataset):1) {
+        if (dataset[i, "HomeTeam"] == team || dataset[i, "AwayTeam"] == team) {
+            for (j in 1:ncol(dataset)) {
+                new.data[count, j] <- as.character(dataset[i, j])
+            }
+            # new.data[count, ] <- as.character(dataset[i, ])
+            count <- count + 1
+        }
+        if (count > no) {
+            break
+        }
+    }
+    # home <- subset(dataset, HomeTeam == team)
+    # away <- subset(dataset, AwayTeam == team)
+    # dataset <- rbind(home, away)
+    # return (dataset[(nrow(dataset) - no + 1):nrow(dataset),])
+    return (new.data)
+}
+
+AllGamesComparison <- function(home = "", away = "") {
+    data <- loadAllContent()
+    compareTable <- data[which(data$HomeTeam == home
+                               & data$AwayTeam == away), ]
+    compareTable <- rbind(compareTable, data[which(data$HomeTeam == away
+                               & data$AwayTeam == home), ])
+    return (compareTable)
+}
+
+TeamComparison <- function(home = "", away = "") {
+    data <- loadAllContent()
+    compareTable <- data[which(data$HomeTeam == home
+                               & data$AwayTeam == away), ]
+    return (compareTable)
+}
+
+SumUpComparison <- function(home = "", away = "") {
+    specData <- teamComparison(home, away)
+    # column.names <- colnames(specData)
+    colNames <- c("Home Team", "Away Team", "Home Win in %", "Draw in %", "Away Win in %",
+                  "Sum of home goals", "Sum of away goals", "Average home goals",
+                  "Average away goals")
+    sumUpData <- c(home, away, 0, 0, 0, 0, 0, 0, 0)
+    len <- dim(specData)[1]
+    for (i in 1:len) {
+        if (specData[i, "FTR"] == "H") {
+            sumUpData[3] <- as.integer(sumUpData[3]) + 1
+        } else if (specData[i, "FTR"] == "D") {
+            sumUpData[4] <- as.integer(sumUpData[4]) + 1
+        } else {
+            sumUpData[5] <- as.integer(sumUpData[5]) + 1
+        }
+    }
+    sumUpData[6] <- sum(specData[, "FTHG"])
+    sumUpData[7] <- sum(specData[, "FTAG"])
+    sumUpData <- matrix(sumUpData)
+    sumUpData <- t(sumUpData)
+    colnames(sumUpData) <- colNames
+    # colnames(sumUpData) <- column.names
+    
+    return (sumUpData)
+}
+
+OverviewAll <- function(home = "", away = "") {
+    home.away <- sumUpComparison(home, away)
+    away.home <- sumUpComparison(away, home)
+    data <- rbind(home.away, away.home)
+    return (data)
+}
+
 # ---------------------------------------------------------------------------------------------------------------------------------------
 
 loadAllContent <- function(path = "Data", league = "Germany", filename = "Synopsis.csv") {
