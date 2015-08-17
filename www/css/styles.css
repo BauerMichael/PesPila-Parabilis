@@ -42,13 +42,27 @@ a {
 }
 
 #compare, #compareAll, #overview, #overviewAll, #teamData, #sumTeamData,
-#stats, #wins, #results, #goalDifferences, #gspm, #all,
+#stats, #wins, #results, #goalDifferences, #gspm, #gsps, #all, #resultsPercent,
 #results1, #results2, #results3, #results4, #results5,
 #allMatches, #homeMatches, #awayMatches, #divisionMatches,
 #overviewMatches, #last2, #last5, #last10 {
     background: #ccc;
     font-size: 11px;
 }
+
+#compare, #compareAll, #overview, #overviewAll, #teamData, #sumTeamData,
+#stats, #wins, #results, #goalDifferences, #gspm, #gsps, #all, #resultsPercent,
+#results1, #results2, #results3, #results4, #results5,
+#allMatches, #homeMatches, #awayMatches, #divisionMatches,
+#overviewMatches, #last2, #last5, #last10 table tr th {
+    background: #999;
+    /*color: #fff;*/
+    font-size: 11px;
+}
+
+/*#gspm table tr th, #gsps table tr th {
+    background-color: #660000;
+}*/
 
 #legend {
     color: #660000;
@@ -62,4 +76,20 @@ a {
 
 #InitializeData {
     display: none;
+}
+
+.shiny-progress .bar {
+    background-color: #FF0000;
+    .opacity: 0.8;
+}
+.shiny-progress .progress {
+    height: 10px;
+}
+.shiny-progress .progress-text {
+    background: rgb(255, 0, 0);
+    .opacity: 0.8;
+}
+
+caption {
+    color: #000;
 }

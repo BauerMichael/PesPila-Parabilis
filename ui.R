@@ -1,10 +1,11 @@
 library(shiny)
 library(hash)
-library(ggplot2)
+# library(ggplot2)
+library(DT)
 
-options(warn=-1)
+# options(warn=-1)
 
-source("global.R")
+# source("global.R")
 
 shinyUI(
 
@@ -93,11 +94,39 @@ shinyUI(
               ),
               column(7,
                   tabsetPanel(
-                      tabPanel("Results Cross Table", dataTableOutput("results")),
-                      tabPanel("Wins", dataTableOutput("wins")),
-                      tabPanel("Goal Differences", dataTableOutput("goalDifferences")),
-                      tabPanel("Goal Sums Per Match (GSPM)", dataTableOutput("gspm")),
-                      tabPanel("All Matches", dataTableOutput("all"))
+                      tabPanel("Match results", {
+
+                        tabsetPanel(
+
+                          tabPanel("Absolute", DT::dataTableOutput("results")),
+                          tabPanel("in %", DT::dataTableOutput("resultsPercent"))
+
+                        )
+
+                      }),
+                      tabPanel("Wins", DT::dataTableOutput("wins")),
+                      tabPanel("Goals and points per match", plotOutput("gpPerMatch")),
+                      tabPanel("Goal Differences", DT::dataTableOutput("goalDifferences")),
+                      tabPanel("Goal Sums", {
+
+                        tabsetPanel(
+
+                          tabPanel("Per Match (GSPM)", DT::dataTableOutput("gspm")),
+                          tabPanel("Per Season (GSPS)", DT::dataTableOutput("gsps")),
+                          tabPanel("Plot GSPM", plotOutput("gspmPlot")),
+                          tabPanel("Plot GSPS", plotOutput("gspsPlot"))
+
+                        )
+
+                      }),
+                      tabPanel("All Matches", {
+
+                        tabsetPanel(
+                          tabPanel("All Divisions", DT::dataTableOutput("all")),
+                          tabPanel("Specific Division", DT::dataTableOutput("specAll"))
+                        )
+
+                      })
                   )
               )
           )
@@ -137,32 +166,32 @@ shinyUI(
                   tabsetPanel(
                       tabPanel("All Matches",
                           tabsetPanel(
-                            tabPanel("Data Table", dataTableOutput("allMatches")),
+                            tabPanel("Data Table", DT::dataTableOutput("allMatches")),
                             tabPanel("Trend Plot", plotOutput("allMatchesTrend")),
                             tabPanel("Box Plot", plotOutput("allMatchesBoxPlot"))
                           )
                       ),
-                      # tabPanel("All Matches", dataTableOutput("allMatches")),
+                      # tabPanel("All Matches", DT::dataTableOutput("allMatches")),
                       tabPanel("Home Matches",
                           tabsetPanel(
-                            tabPanel("Data Table", dataTableOutput("homeMatches")),
+                            tabPanel("Data Table", DT::dataTableOutput("homeMatches")),
                             tabPanel("Trend Plot", plotOutput("homeMatchesTrend")),
                             tabPanel("Box Plot", plotOutput("homeMatchesBoxPlot"))
                           )
                       ),
                       tabPanel("Away Matches",
                           tabsetPanel(
-                            tabPanel("Data Table", dataTableOutput("awayMatches")),
+                            tabPanel("Data Table", DT::dataTableOutput("awayMatches")),
                             tabPanel("Trend Plot", plotOutput("awayMatchesTrend")),
                             tabPanel("Box Plot", plotOutput("awayMatchesBoxPlot"))
                           )
                       ),
-                      # tabPanel("Away Matches", dataTableOutput("awayMatches")),
-                      tabPanel("By Division", dataTableOutput("divisionMatches")),
-                      tabPanel("Last 2", dataTableOutput("last2")),
-                      tabPanel("Last 5", dataTableOutput("last5")),
-                      tabPanel("Last 10", dataTableOutput("last10")),
-                      tabPanel("Overview", dataTableOutput("overviewMatches"))
+                      # tabPanel("Away Matches", DT::dataTableOutput("awayMatches")),
+                      tabPanel("By Division", DT::dataTableOutput("divisionMatches")),
+                      tabPanel("Last 2", DT::dataTableOutput("last2")),
+                      tabPanel("Last 5", DT::dataTableOutput("last5")),
+                      tabPanel("Last 10", DT::dataTableOutput("last10")),
+                      tabPanel("Overview", DT::dataTableOutput("overviewMatches"))
                   )
               )
           )
@@ -198,19 +227,19 @@ shinyUI(
                   tabsetPanel(
                       tabPanel("Home vs. Away", {
                         tabsetPanel(
-                          tabPanel("Data Table", dataTableOutput("compare")),
+                          tabPanel("Data Table", DT::dataTableOutput("compare")),
                           tabPanel("Box Plot", plotOutput("hvaBoxPlot")),
-                          tabPanel("Summary", dataTableOutput("overview"))
+                          tabPanel("Summary", DT::dataTableOutput("overview"))
                         )
                       }),
                       tabPanel("All matches", {
                         tabsetPanel(
-                          tabPanel("All outcomes of the two teams", dataTableOutput("compareAll")),
+                          tabPanel("All outcomes of the two teams", DT::dataTableOutput("compareAll")),
                           tabPanel("Box Plot", plotOutput("hvaAllBoxPlot"))
-                          # tabPanel("Summary", dataTableOutput("overview"))
+                          # tabPanel("Summary", DT::dataTableOutput("overview"))
                         )
                       }),
-                      tabPanel("Overview: All outcomes", dataTableOutput("overviewAll")),
+                      tabPanel("Overview: All outcomes", DT::dataTableOutput("overviewAll")),
                       tabPanel("LM Plot", plotOutput("lmTest"))
                   )
               )

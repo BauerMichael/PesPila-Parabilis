@@ -238,7 +238,7 @@ Wins <- function(path = "Data", country = "Germany") {
     divisions <- list.files(path = paste(path, country, sep = "/"), pattern = ".csv")
     length.divisions <- length(divisions)
     row.names <- c()
-    column.names <- c("League", "HWin", "Draw", "AWin", "FTHG", "FTAG", "HTHG", "HTAG")
+    column.names <- c("Division", "HWin", "Draw", "AWin", "FTHG", "FTAG", "HTHG", "HTAG")
     cum.data <- data.frame(matrix(0, length.divisions, 8))
     for (i in 1:length.divisions) {
         dataset <- LoadCountryData(path, country, divisions[i])
@@ -307,6 +307,48 @@ GSPM <- function(path = "Data", country = "Germany") {
     colnames(cum.data) <- column.names
     cum.data[, 1] <- row.names
     return (cum.data)
+}
+
+GSPS <- function(path = "Data", folder = "Seasons", division = "Bundesliga1") {
+    row.names <- GetSeasons()
+    col.names <- c("Season / Summary", "Home Goals", "Away Goals", "All Goals", "Goals per game")
+    len.col.names <- length(col.names)
+    len.row.names <- length(row.names)
+    data <- data.frame(matrix(ncol = len.col.names, nrow = len.row.names, 0))
+    colnames(data) <- col.names
+    rownames(data) <- row.names
+    # data[, 1] <- row.names
+    look.up <- paste(path, folder, sep = "/")
+    # print(GetFilenamesLeaugesHashTable()[division])
+    for (row in row.names) {
+        dataset <- read.csv(file = paste(look.up, row, GetFilenamesLeaugesHashTable()[[division]], sep = "/"))
+        print(dataset)
+        # print(paste(look.up, row, GetFilenamesLeaugesHashTable()[[division]], sep = "/"))
+    }
+    return (data)
+    # divisions <- list.files(path = paste(path, country, sep = "/"), pattern = ".csv")
+    # length.divisions <- length(divisions)
+    # row.names <- c()
+    # column.names <- c("League", 0:13)
+    # cum.data <- data.frame(matrix(0, length.divisions, 15))
+    # for (i in 1:length.divisions) {
+    #     # filename <- paste(divisions[i], ".csv", sep = "")
+    #     dataset <- LoadCountryData(path, country, divisions[i])
+    #     home <- dataset[, "FTHG"]
+    #     away <- dataset[, "FTAG"]
+    #     for (j in 1:length(home)) {
+    #         gspm <- home[j] + away[j]
+    #         if (gspm > 13) {
+    #             next
+    #         }
+    #         cum.data[i, gspm + 2] <- cum.data[i, gspm + 2] + 1
+    #     }
+    #     row.names <- c(row.names, strsplit(x = divisions[i], split = ".csv")[[1]])
+    # }
+    # rownames(cum.data) <- row.names
+    # colnames(cum.data) <- column.names
+    # cum.data[, 1] <- row.names
+    # return (cum.data)
 }
 
 ResultsComparison <- function(path = "Data", country = "Germany", division = "Bundesliga1") {
