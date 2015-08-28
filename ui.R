@@ -104,9 +104,29 @@ shinyUI(
                         )
 
                       }),
-                      tabPanel("Wins", DT::dataTableOutput("wins")),
-                      tabPanel("Goals and points per match", plotOutput("gpPerMatch")),
-                      tabPanel("Goal Differences", DT::dataTableOutput("goalDifferences")),
+                      tabPanel("Wins", {
+
+                        tabsetPanel(
+
+                          tabPanel("Absolute", DT::dataTableOutput("wins")),
+                          tabPanel("in %", DT::dataTableOutput("winsPercent"))
+
+                        )
+
+                      }),
+                      # tabPanel("Wins", DT::dataTableOutput("wins")),
+                      # tabPanel("GPPM", plotOutput("gpPerMatch")),
+                      # tabPanel("Goal Differences", DT::dataTableOutput("goalDifferences")),
+                      tabPanel("Goal Differences", {
+
+                        tabsetPanel(
+
+                          tabPanel("Absolute", DT::dataTableOutput("goalDifferences")),
+                          tabPanel("in %", DT::dataTableOutput("goalDifferencesPercent"))
+
+                        )
+
+                      }),
                       tabPanel("Goal Sums", {
 
                         tabsetPanel(
@@ -119,14 +139,12 @@ shinyUI(
                         )
 
                       }),
-                      tabPanel("All Matches", {
+                      tabPanel("All Matches", DT::dataTableOutput("all"))
+                        # tabsetPanel(
+                        #   tabPanel("Specific Division", DT::dataTableOutput("specAll"))
+                        # )
 
-                        tabsetPanel(
-                          tabPanel("All Divisions", DT::dataTableOutput("all")),
-                          tabPanel("Specific Division", DT::dataTableOutput("specAll"))
-                        )
-
-                      })
+                      # })
                   )
               )
           )
@@ -191,7 +209,13 @@ shinyUI(
                       tabPanel("Last 2", DT::dataTableOutput("last2")),
                       tabPanel("Last 5", DT::dataTableOutput("last5")),
                       tabPanel("Last 10", DT::dataTableOutput("last10")),
-                      tabPanel("Overview", DT::dataTableOutput("overviewMatches"))
+                      # tabPanel("Overview", DT::dataTableOutput("overviewMatches"))
+                      tabPanel("Overview",
+                          tabsetPanel(
+                            tabPanel("Absolute", DT::dataTableOutput("overviewMatches")),
+                            tabPanel("in %", DT::dataTableOutput("overviewMatchesPercent"))
+                          )
+                      )
                   )
               )
           )
@@ -210,7 +234,7 @@ shinyUI(
                           selectInput("away",
                                       label = "Choose a home team",
                                       choices = team <- FolderStructure(path = paste("Data", ReadPreferences()[1], sep = "/")),
-                                      selected = "Wolfsburg")
+                                      selected = "Dortmund")
                   ),
                   sidebarPanel(width = 12, id = "legend",
                       div("Description of the shortcuts:", id = "header"),
@@ -229,7 +253,9 @@ shinyUI(
                         tabsetPanel(
                           tabPanel("Data Table", DT::dataTableOutput("compare")),
                           tabPanel("Box Plot", plotOutput("hvaBoxPlot")),
-                          tabPanel("Summary", DT::dataTableOutput("overview"))
+                          tabPanel("Hist Plot", plotOutput("hvaHistPlot")),
+                          tabPanel("Summary", DT::dataTableOutput("overview")),
+                          tabPanel("Test", DT::dataTableOutput("test"))
                         )
                       }),
                       tabPanel("All matches", {

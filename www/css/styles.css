@@ -42,10 +42,10 @@ a {
 }
 
 #compare, #compareAll, #overview, #overviewAll, #teamData, #sumTeamData,
-#stats, #wins, #results, #goalDifferences, #gspm, #gsps, #all, #resultsPercent,
+#stats, #wins, #winsPercent, #results, #goalDifferences, #goalDifferencesPercent, #gspm, #gsps, #all, #resultsPercent,
 #results1, #results2, #results3, #results4, #results5,
 #allMatches, #homeMatches, #awayMatches, #divisionMatches,
-#overviewMatches, #last2, #last5, #last10 {
+#overviewMatches, #overviewMatchesPercent, #last2, #last5, #last10, #test {
     background: #ccc;
     font-size: 11px;
 }

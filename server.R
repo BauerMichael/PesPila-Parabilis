@@ -38,7 +38,7 @@ GetSeasons <- function() {
                  "0102", "0203", "0304", "0405",
                  "0506", "0607", "0708", "0809",
                  "0910", "1011", "1112", "1213",
-                 "1314", "1415"))
+                 "1314", "1415", "1516"))
 }
 
 GetCountries <- function() {
@@ -102,16 +102,16 @@ DownloadFiles <- function(path = "Data", seasons = "",
     }
 }
 
-CreateDirectories <- function(path = "Data", seasons = "", warnings = FALSE) {
+CreateSeasonDirectories <- function(path = "Data", seasons = "", warnings = FALSE) {
     for (season in seasons) {
         dir.create(paste(path, season, sep = "/"), showWarnings = warnings)
     }
 }
 
-Unzip2Dir <- function(path = "Data", seasons = "") {
+Unzip2Dir <- function(zip.path = "Data", ex.path = "Data", seasons = "") {
     for (season in seasons) {
-        unzip(zipfile = paste(path, "/", season, ".zip", sep = ""),
-            exdir = paste(path, season, sep = "/"))
+        unzip(zipfile = paste(zip.path, "/", season, ".zip", sep = ""),
+            exdir = paste(ex.path, season, sep = "/"))
     }
 }
 
@@ -208,15 +208,38 @@ ExtractAllTeams <- function(filename, path = "Data", country = "") {
 }
 
 Initialize <- function(path = "Data") {
-    country <- GetCountries()
-    for (c in country) {
-        dir.create(paste(path, c, sep = "/"))
-    }
-    seasons <- GetSeasons()
-    temp.dir <- CreateTempDir(path)
-    DownloadFiles(temp.dir, seasons)
-    CreateDirectories(temp.dir, seasons)
-    Unzip2Dir(temp.dir, seasons)
+    
+    country <- GetCountries()  # get all desired countries (c.f. function)
+
+    for (c in country) {  # FOR
+        dir.create(paste(path, c, sep = "/"))  # create a directory for each country (path = Data)
+    }  # END FOR
+    
+    seasons <- GetSeasons()  # get all desired seasons (c.f. function)
+    temp.dir <- CreateTempDir(path = path)  # create a temporary directory => Data/Temp
+    DownloadFiles(path = temp.dir, seasons = seasons)  # download all seasons data files to Data/Temp
+    CreateSeasonDirectories(path = temp.dir, seasons = seasons)  # create a directory for each season in Data/Temp
+    
+    for (c in country) {  # FOR
+        dir <- paste("Data", c, sep = "/")  # create a dir name with Data/country_name...
+        CreateSeasonDirectories(path = dir, seasons = c(seasons, "Teams"))  # create a directory for each season in each country's folder including a "Teams" folder
+    }  # END FOR
+    
+    Unzip2Dir(zip.dir = temp.dir, ex.dir = temp.dir, seasons = seasons)  # unzip all seasons into the seasons folders in Data/Temp
+    
+    for (c in country) {  # FOR
+        dir <- paste("Data", c, sep = "/")  # create a dir name with Data/country_name...
+        Unzip2Dir(zip.path = temp.dir, ex.path = dir, seasons = seasons)  # unzip all seasons into every country's folder
+    }  # END FOR
+
+    for (c in country) {  # FOR
+        for (season in seasons) {  # FOR
+            files <- strsplit(x = list.files(path = paste("Data", c, season, sep = "/"), pattern = ".csv"), split = ".csv")
+            print(files)
+        }  # END FOR
+    }  # END FOR
+
+
     ExtractData(path, temp.dir)
     SetData(path, temp.dir)
     CopyData(path, temp.dir)
@@ -272,18 +295,18 @@ Wins <- function(path = "Data", country = "Germany") {
     divisions <- list.files(path = paste(path, country, sep = "/"), pattern = ".csv")
     length.divisions <- length(divisions)
     row.names <- c()
-    column.names <- c("Division", "HWin", "Draw", "AWin", "FTHG", "FTAG", "HTHG", "HTAG")
-    cum.data <- data.frame(matrix(0, length.divisions, 8))
+    column.names <- c("HWin", "Draw", "AWin", "FTHG", "FTAG", "HTHG", "HTAG")
+    cum.data <- data.frame(matrix(0, length.divisions, 7))
     for (i in 1:length.divisions) {
         dataset <- LoadCountryData(path, country, divisions[i])
-        sum <- c(0, 0, 0, 0, sum(dataset[, "FTHG"]), sum(dataset[, "FTAG"]), sum(dataset[, "HTHG"]), sum(dataset[, "HTAG"]))
+        sum <- c(0, 0, 0, sum(dataset[, "FTHG"]), sum(dataset[, "FTAG"]), sum(dataset[, "HTHG"]), sum(dataset[, "HTAG"]))
         for (value in as.vector(dataset[, "FTR"])) {
             if (value == "H") {
-                sum[2] <- sum[2] + 1
+                sum[1] <- sum[1] + 1
             } else if (value == "D") {
-                sum[3] <- sum[3] + 1
+                sum[2] <- sum[2] + 1
             } else {
-                sum[4] <- sum[4] + 1
+                sum[3] <- sum[3] + 1
             }
         }
         row.names <- c(row.names, strsplit(x = divisions[i], split = ".csv")[[1]])
@@ -318,15 +341,15 @@ GoalDifferences <- function(path = "Data", country = "Germany") {
     divisions <- list.files(path = paste(path, country, sep = "/"), pattern = ".csv")
     length.divisions <- length(divisions)
     row.names <- c()
-    column.names <- c("Division", 0:9)
-    cum.data <- data.frame(matrix(0, length.divisions, 11))
+    column.names <- 0:9
+    cum.data <- data.frame(matrix(0, length.divisions, 10))
     for (i in 1:length.divisions) {
         dataset <- LoadCountryData(path, country, divisions[i])
         home <- dataset[, "FTHG"]
         away <- dataset[, "FTAG"]
         for (j in 1:length(home)) {
             difference <- abs(home[j] - away[j])
-            cum.data[i, difference + 2] <- cum.data[i, difference + 2] + 1
+            cum.data[i, difference + 1] <- cum.data[i, difference + 1] + 1
         }
         row.names <- c(row.names, strsplit(x = divisions[i], split = ".csv")[[1]])
     }
@@ -447,9 +470,13 @@ MatchesByDivision <- function(team, path = "Data", country = "Germany", division
     home <- subset(dataset, HomeTeam == team)
     away <- subset(dataset, AwayTeam == team)
     dataset <- rbind(home, away)
-    hash.table <- GetFilenamesLeaugesHashTable()
-    hash <- strsplit(x = hash.table[[division]], split = ".csv")
-    return (subset(dataset, Div == hash))
+    if (division == "Synopsis") {
+        return (dataset)
+    } else {
+        hash.table <- GetFilenamesLeaugesHashTable()
+        hash <- strsplit(x = hash.table[[division]], split = ".csv")
+        return (subset(dataset, Div == hash))
+    }
 }
 
 TrendPlot <- function(team, kind = "B", path = "Data", country = "Germany", filename = "Synopsis.csv") {
@@ -512,27 +539,27 @@ Trend <- function(home, away) {
 }
 
 TeamOverview <- function(team, path = "Data", country = "Germany", filename = "Synopsis.csv") {
-    header <- c("\\", "Win", "Draw", "Lost", "FTG", "HTG", "FTG against", "HTG against")
+    header <- c("Win", "Draw", "Lost", "FTG", "HTG", "FTG against", "HTG against")
     rows <- c("Home", "Away", "Overall")
     dataset <- read.csv(file = paste(path, country, filename, sep = "/"))
-    new.data <- data.frame(matrix(0, 3, 8))
+    new.data <- data.frame(matrix(0, 3, 7))
     home <- subset(dataset, HomeTeam == team)
     away <- subset(dataset, AwayTeam == team)
-    new.data[1, 2] <- nrow(subset(home, FTR == "H"))
-    new.data[1, 3] <- nrow(subset(home, FTR == "D"))
-    new.data[1, 4] <- nrow(subset(home, FTR == "A"))
-    new.data[2, 2] <- nrow(subset(away, FTR == "A"))
-    new.data[2, 3] <- nrow(subset(away, FTR == "D"))
-    new.data[2, 4] <- nrow(subset(away, FTR == "H"))
-    new.data[1, 5] <- sum(home[, "FTHG"])
-    new.data[1, 6] <- sum(home[, "HTHG"])
-    new.data[1, 7] <- sum(home[, "FTAG"])
-    new.data[1, 8] <- sum(home[, "HTAG"])
-    new.data[2, 5] <- sum(away[, "FTAG"])
-    new.data[2, 6] <- sum(away[, "HTAG"])
-    new.data[2, 7] <- sum(away[, "FTHG"])
-    new.data[2, 8] <- sum(away[, "HTHG"])
-    for (i in 2:ncol(new.data)) {
+    new.data[1, 1] <- nrow(subset(home, FTR == "H"))
+    new.data[1, 2] <- nrow(subset(home, FTR == "D"))
+    new.data[1, 3] <- nrow(subset(home, FTR == "A"))
+    new.data[2, 1] <- nrow(subset(away, FTR == "A"))
+    new.data[2, 2] <- nrow(subset(away, FTR == "D"))
+    new.data[2, 3] <- nrow(subset(away, FTR == "H"))
+    new.data[1, 4] <- sum(home[, "FTHG"])
+    new.data[1, 5] <- sum(home[, "HTHG"])
+    new.data[1, 6] <- sum(home[, "FTAG"])
+    new.data[1, 7] <- sum(home[, "HTAG"])
+    new.data[2, 4] <- sum(away[, "FTAG"])
+    new.data[2, 5] <- sum(away[, "HTAG"])
+    new.data[2, 6] <- sum(away[, "FTHG"])
+    new.data[2, 7] <- sum(away[, "HTHG"])
+    for (i in 1:ncol(new.data)) {
         new.data[3, i] <- new.data[1, i] + new.data[2, i]
     }
     rownames(new.data) <- rows
@@ -543,7 +570,6 @@ TeamOverview <- function(team, path = "Data", country = "Germany", filename = "S
 
 LastMatches <- function(team, no = 2, path = "Data", country = "Germany", filename = "Synopsis.csv") {
     dataset <- read.csv(file = paste(path, country, filename, sep = "/"))
-    # print(dataset[(nrow(dataset)-40):nrow(dataset), 1:6])
     new.data <- data.frame(matrix(0, no, ncol(dataset)))
     colnames(new.data) <- colnames(dataset)
     count <- 1
@@ -585,9 +611,9 @@ TeamComparison <- function(home = "", away = "") {
 SumUpComparison <- function(home = "", away = "") {
     specData <- teamComparison(home, away)
     # column.names <- colnames(specData)
-    colNames <- c("Home Team", "Away Team", "Home Win in %", "Draw in %", "Away Win in %",
-                  "Sum of home goals", "Sum of away goals", "Average home goals",
-                  "Average away goals")
+    colNames <- c("Home Team", "Away Team", "Home Win", "Draw", "Away Win",
+                  "Home Goals", "Away Goals", "Average Home Goals",
+                  "Average Away Goals")
     sumUpData <- c(home, away, 0, 0, 0, 0, 0, 0, 0)
     len <- dim(specData)[1]
     for (i in 1:len) {
@@ -601,6 +627,8 @@ SumUpComparison <- function(home = "", away = "") {
     }
     sumUpData[6] <- sum(specData[, "FTHG"])
     sumUpData[7] <- sum(specData[, "FTAG"])
+    sumUpData[8] <- sum(specData[, "FTHG"]) / nrow(specData)
+    sumUpData[9] <- sum(specData[, "FTAG"]) / nrow(specData)
     sumUpData <- matrix(sumUpData)
     sumUpData <- t(sumUpData)
     colnames(sumUpData) <- colNames
@@ -855,6 +883,19 @@ init <- function(path = "Data", filename = "Synopsis.csv") {
 
 shinyServer(
     function(input, output, session) {
+        country <- GetCountries()
+        seasons <- GetSeasons()
+        # temp.dir <- "Data/Temp"
+        for (c in country) {  # FOR
+            for (season in seasons) {  # FOR
+                files <- strsplit(x = list.files(path = paste("Data", c, season, sep = "/"), pattern = ".csv"), split = ".csv")
+                print(files)
+            }  # END FOR
+        }  # END FOR
+        # for (c in country) {  # FOR
+        #     dir <- paste("Data", c, sep = "/")  # create a dir name with Data/country_name...
+        #     Unzip2Dir(zip.path = temp.dir, ex.path = dir, seasons = seasons)
+        # }  # END FOR
 
         preferences <- LoadPreferences(output)
 
@@ -900,6 +941,35 @@ shinyServer(
             output$wins <- DT::renderDataTable({
 
                 data <- Wins(path = "Data", country = input$countryOverview)
+                datatable(data,
+                    rownames = TRUE, escape = FALSE, caption = 'My first datatable try.',
+                    extensions = c('TableTools', 'ColReorder', 'ColVis', 'FixedColumns'),
+                    options = list(pageLength = -1,
+                        lengthMenu = list(c(-1, 50, 100), list('All', '50', '150')),
+                        deferRender = TRUE, colVis = list(exclude = c(0, 1), activate = 'mouseover'),
+                        searchHighlight = TRUE,
+                        # initComplete = JS(
+                        #     "function(settings, json) {",
+                        #         "$(this).api().table().header().css({'background' : '#000000'})",
+                        #     "}"),
+                        dom = 'T<"clear">RC<"clear">lfrtipS',
+                        colReorder = list(realtime = TRUE),
+                        TableTools = list(sSwfPath = copySWF('www', pdf = TRUE))
+                    )
+                ) #%>%
+                #     formatStyle(columns = colnames(GSPS(path = "Data", folder = "Seasons", division = "Bundesliga1"))[, 2:4],
+                #                 color = styleInterval(c(400, 500), c('red', 'blue', 'green')),
+                #                 fontWeight = 'bold'
+                #     )
+            })
+            output$winsPercent <- DT::renderDataTable({
+
+                data <- Wins(path = "Data", country = input$countryOverview)
+                for (i in 1:nrow(data)) {
+                    data[i, 1:3] <- round(data[i, 1:3] / sum(data[i, 1:3]) * 100, 2)
+                    data[i, 4:5] <- round(data[i, 4:5] / sum(data[i, 4:5]) * 100, 2)
+                    data[i, 6:7] <- round(data[i, 6:7] / sum(data[i, 6:7]) * 100, 2)
+                }
                 datatable(data,
                     rownames = TRUE, escape = FALSE, caption = 'My first datatable try.',
                     extensions = c('TableTools', 'ColReorder', 'ColVis', 'FixedColumns'),
@@ -1052,6 +1122,33 @@ shinyServer(
                 #                 fontWeight = 'bold'
                 #     )
             })
+            output$goalDifferencesPercent <- DT::renderDataTable({
+
+                data <- GoalDifferences(path = "Data", country = input$countryOverview)
+                for (i in 1:nrow(data)) {
+                    data[i, ] <- round(data[i, ] / sum(data[i, ]) * 100, 2)
+                }
+                datatable(data,
+                    rownames = TRUE, escape = FALSE, caption = 'My first datatable try.',
+                    extensions = c('TableTools', 'ColReorder', 'ColVis', 'FixedColumns'),
+                    options = list(pageLength = -1,
+                        lengthMenu = list(c(-1, 50, 100), list('All', '50', '150')),
+                        deferRender = TRUE, colVis = list(exclude = c(0, 1), activate = 'mouseover'),
+                        searchHighlight = TRUE,
+                        # initComplete = JS(
+                        #     "function(settings, json) {",
+                        #         "$(this).api().table().header().css({'background' : '#000000'})",
+                        #     "}"),
+                        dom = 'T<"clear">RC<"clear">lfrtipS',
+                        colReorder = list(realtime = TRUE),
+                        TableTools = list(sSwfPath = copySWF('www', pdf = TRUE))
+                    )
+                ) #%>%
+                #     formatStyle(columns = colnames(GSPS(path = "Data", folder = "Seasons", division = "Bundesliga1"))[, 2:4],
+                #                 color = styleInterval(c(400, 500), c('red', 'blue', 'green')),
+                #                 fontWeight = 'bold'
+                #     )
+            })
             output$gspm <- DT::renderDataTable({
 
                 data <- GSPM(path = "Data", country = input$countryOverview)
@@ -1122,8 +1219,9 @@ shinyServer(
             output$gspsPlot <- renderPlot({
 
                 data <- GSPS(path = "Data", folder = "Seasons", division = "Bundesliga1")
+                print(head(data))
                 plot(1:22, data[, 6], type = "l", xlim = c(1, 23), ylim = c(0.5, 3.5), col = "blue", lwd = 2, axes = FALSE)
-                axis(side = 1, at = c(1, 5, 10, 15, 20, 22), label = data[c(1, 5, 10, 15, 20, 22), 1])
+                axis(side = 1, at = c(1, 5, 10, 15, 20, 22), label = rownames(data)[c(1, 5, 10, 15, 20, 22)])
                 axis(2)
                 lines(1:22, data[, 4], col = "magenta", lwd = 2)
                 lines(1:22, data[, 5], col = "orange", lwd = 2)
@@ -1366,6 +1464,78 @@ shinyServer(
             #                 fontWeight = 'bold'
             #     )
         })
+        output$test <- DT::renderDataTable({
+
+            dataAll <- TeamOverview(input$teamChoice, "Data", input$teamCountry)
+            games <- rep(3, 0)
+            hGoals <- rep(4, 0)
+            aGoals <- rep(4, 0)
+            for (i in 1:nrow(dataAll)) {
+                games[i] <- sum(dataAll[i, c("Win", "Draw", "Lost")])
+                hGoals[i] <- dataAll[i, "FTG"]/games[i]
+                aGoals[i] <- dataAll[i, "FTG against"]/games[i]
+            }
+
+            dataSpec <- SumUpComparison(input$home, input$away)
+            hGoals[4] <- dataSpec[1, "Average Home Goals"]
+            aGoals[4] <- dataSpec[1, "Average Away Goals"]
+
+            hg <- hGoals[1]*0.7
+            print(hg)
+
+            # print(c((hGoals[1]*0.7+hGoals[4]*1.3)/2, (aGoals[1]*0.7+aGoals[4]*1.3)/2))
+
+            datatable(dataAll,
+                rownames = TRUE, escape = FALSE, caption = 'My first datatable try.',
+                extensions = c('TableTools', 'ColReorder', 'ColVis', 'FixedColumns'),
+                options = list(pageLength = -1,
+                    lengthMenu = list(c(-1, 50, 100), list('All', '50', '150')),
+                    deferRender = TRUE, colVis = list(exclude = c(0, 1), activate = 'mouseover'),
+                    searchHighlight = TRUE,
+                    # initComplete = JS(
+                    #     "function(settings, json) {",
+                    #         "$(this).api().table().header().css({'background' : '#000000'})",
+                    #     "}"),
+                    dom = 'T<"clear">RC<"clear">lfrtipS',
+                    colReorder = list(realtime = TRUE),
+                    TableTools = list(sSwfPath = copySWF('www', pdf = TRUE))
+                )
+            ) #%>%
+            #     formatStyle(columns = colnames(GSPS(path = "Data", folder = "Seasons", division = "Bundesliga1"))[, 2:4],
+            #                 color = styleInterval(c(400, 500), c('red', 'blue', 'green')),
+            #                 fontWeight = 'bold'
+            #     )
+        })
+        output$overviewMatchesPercent <- DT::renderDataTable({
+
+            data <- TeamOverview(input$teamChoice, "Data", input$teamCountry)
+            for (i in 1:nrow(data)) {
+                data[i, 1:3] <- round(data[i, 1:3] / sum(data[i, 1:3]) * 100, 2)
+                data[i, 4:5] <- round(data[i, 4:5] / sum(data[i, 4:5]) * 100, 2)
+                data[i, 6:7] <- round(data[i, 6:7] / sum(data[i, 6:7]) * 100, 2)
+            }
+
+            datatable(data,
+                rownames = TRUE, escape = FALSE, caption = 'My first datatable try.',
+                extensions = c('TableTools', 'ColReorder', 'ColVis', 'FixedColumns'),
+                options = list(pageLength = -1,
+                    lengthMenu = list(c(-1, 50, 100), list('All', '50', '150')),
+                    deferRender = TRUE, colVis = list(exclude = c(0, 1), activate = 'mouseover'),
+                    searchHighlight = TRUE,
+                    # initComplete = JS(
+                    #     "function(settings, json) {",
+                    #         "$(this).api().table().header().css({'background' : '#000000'})",
+                    #     "}"),
+                    dom = 'T<"clear">RC<"clear">lfrtipS',
+                    colReorder = list(realtime = TRUE),
+                    TableTools = list(sSwfPath = copySWF('www', pdf = TRUE))
+                )
+            ) #%>%
+            #     formatStyle(columns = colnames(GSPS(path = "Data", folder = "Seasons", division = "Bundesliga1"))[, 2:4],
+            #                 color = styleInterval(c(400, 500), c('red', 'blue', 'green')),
+            #                 fontWeight = 'bold'
+            #     )
+        })
         output$last2 <- DT::renderDataTable({
 
             data <- LastMatches(input$teamChoice, 2, "Data", input$teamCountry)[, 1:10]
@@ -1418,7 +1588,7 @@ shinyServer(
         })
         output$last10 <- DT::renderDataTable({
 
-            data <- LastMatches(input$teamChoice, 10, "Data", input$teamCountry, "Bundesliga1.csv")[, 1:10]
+            data <- LastMatches(input$teamChoice, 10, "Data", input$teamCountry)[, 1:10]
 
             datatable(data,
                 rownames = TRUE, escape = FALSE, caption = 'My first datatable try.',
@@ -1444,6 +1614,7 @@ shinyServer(
         output$gpPerMatch <- renderPlot({
 
             data <- GoalsAndPointsPerMatch(path = "Data", country = input$teamCountry, filename = paste(c(input$teamDivision, ".csv"), collapse = ""))
+            print(data)
             plot(data$points, data$goals, type = "l")
         })
         output$allMatchesTrend <- renderPlot({
@@ -1601,9 +1772,53 @@ shinyServer(
         })
 
         output$hvaBoxPlot <- renderPlot({
-            hData <- TrendPlot(input$home, "H", "Data", input$teamCountry)
-            aData <- TrendPlot(input$away, "A", "Data", input$teamCountry)
-            boxplot(hData[[4]]/length(hData[[4]]), aData[[4]]/length(aData[[4]]), ylim = c(0, 3))
+            data <- TeamComparison(input$home, input$away)[, 2:10]
+            hData <- rep(0, nrow(data)+1)
+            aData <- rep(0, nrow(data)+1)
+            for (i in 1:nrow(data)) {
+                if (data[i, "FTR"] == "H") {
+                    hData[i+1] <- hData[i] + 3
+                } else if (data[i, "FTR"] == "A") {
+                    aData[i+1] <- aData[i] + 3
+                } else {
+                    hData[i+1] <- hData[i] + 1
+                    aData[i+1] <- aData[i] + 1
+                }
+            }
+            hData <- hData[-1]
+            aData <- aData[-1]
+            # hData <- TrendPlot(input$home, "H", "Data", input$teamCountry)
+            # aData <- TrendPlot(input$away, "A", "Data", input$teamCountry)
+            boxplot(hData/length(hData), aData/length(aData), ylim = c(0, 3))
+            # boxplot(hData[[4]]/length(hData[[4]]), aData[[4]]/length(aData[[4]]), ylim = c(0, 3))
+        })
+
+        output$hvaHistPlot <- renderPlot({
+            data <- TeamComparison(input$home, input$away)[, 2:10]
+            hData <- rep(0, nrow(data))
+            for (i in 1:nrow(data)) {
+                if (data[i, "FTR"] == "H") {
+                    hData[i] <- 0
+                } else if (data[i, "FTR"] == "A") {
+                    hData[i] <- 1
+                } else {
+                    hData[i] <- 2
+                }
+            }
+            # hData <- TrendPlot(input$home, "H", "Data", input$teamCountry)
+            # aData <- TrendPlot(input$away, "A", "Data", input$teamCountry)
+            # hist(x, freq = FALSE, ylim = c(0, 0.2))
+            hist(hData, breaks = 10, col = "cornflowerblue",
+                        xlab = "Points", main = "Histogram: Points won by home team", axes = FALSE, ylim = c(0, nrow(data)))
+            axis(side = 1, at = c(0, 1, 2), label = c("Home Win", "Draw", "Away Win"))
+            axis(side = 2, at = c(0, nrow(data)), label = c(0, nrow(data)))
+            # hist(hData, breaks = 10, col = "cornflowerblue", xlab = "Points", main = "Histogram: Points won by home team", xlim = c(0, 3))
+            print(length(hData))
+            # curve(rnorm(hData), col = 2, lty = 2, lwd = 2, add = TRUE)
+            # curve(dchisq(hData), col = 2, lty = 2, lwd = 2, add = TRUE)
+            # curve(dchisq(hData, df = 4), col = 2, lty = 2, lwd = 2, add = TRUE)
+            # hist(-hData, col = "red", xlab = "Points", main = "Histogram: Points won by home team")
+            # boxplot(hData[[4]]/length(hData[[4]]), aData[[4]]/length(aData[[4]]), ylim = c(0, 3))
         })
 
         output$hvaAllBoxPlot <- renderPlot({
